@@ -29,6 +29,10 @@ Closing line:
 
 > Metric Court doesn’t tell your company which number sounds right. It gives every number a definition, every disagreement a hearing, and every resolution a precedent.
 
+## Devpost
+
+Paste-ready submission fields, screenshots, and the demo video are in [`DEVPOST.md`](./DEVPOST.md) and `docs/submission/`. Submit on [the hackathon Devpost](https://api-cloud-ai-hackathon-2026.devpost.com/) before **Thursday, 3 September 2026, 10:00 AM PST**. Challenge: **Xano: Rebuild a SaaS Tool You Hate**.
+
 ## Run locally
 
 ```bash
