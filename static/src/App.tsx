@@ -20,7 +20,7 @@ export default function App() {
     if (!confirm("Reset Aether Credit to the seeded docket? Open demo cases will be cleared.")) return;
     await api.reset();
     setTick((n) => n + 1);
-    window.location.href = "/";
+    window.location.hash = "#/";
   }
 
   return (

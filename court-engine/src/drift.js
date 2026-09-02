@@ -80,8 +80,10 @@ export function definitionsDiffer(a, b) {
     const av = a[k];
     const bv = b[k];
     if (av && bv && normalizeText(av) !== normalizeText(bv)) {
-      diffs.push({ field: k, a: av, b: bv });
-    }
+    diffs.push({ field: k, a: av, b: bv });
+  } else if ((av && !bv) || (!av && bv)) {
+    diffs.push({ field: k, a: av || "unspecified", b: bv || "unspecified" });
+  }
   }
   return { different: diffs.length > 0, diffs };
 }

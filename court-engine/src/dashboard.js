@@ -43,7 +43,7 @@ export function dashboard() {
   }
 
   const active = state.metrics.find((m) => m.canonical_id === "M-ACT-001");
-  const activeDefs = state.metric_definitions.filter((d) => d.metric_id === active?.id && !/Unresolved/.test(d.formula || "")).length;
+  const activeDefs = state.metric_definitions.filter((d) => d.metric_id === active?.id).length;
   const headline =
     activeDefs >= 3
       ? `Your company currently has ${activeDefs} definitions of “Active Customer.”`

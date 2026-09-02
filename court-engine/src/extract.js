@@ -172,13 +172,14 @@ function enrichFromExplanations(claims, turns) {
   for (const claim of claims) {
     const speaker = `${claim.speaker} ${claim.role || ""}`.toLowerCase();
     for (const note of notes) {
-      if (/sales/.test(note) && /sales/.test(speaker)) {
+      const n = note.toLowerCase();
+      if (/sales/.test(n) && /sales/.test(speaker)) {
         claim.population = claim.population || populationFromText(note) || "Customers eligible to return";
       }
-      if (/finance dashboard|finance/.test(note) && /finance/.test(speaker)) {
+      if (/finance dashboard|finance/.test(n) && /finance/.test(speaker)) {
         claim.population = claim.population || "Complete original cohort";
       }
-      if (/board/.test(note) && /country|board|aisha/.test(speaker)) {
+      if (/board/.test(n) && /country|board|aisha/.test(speaker)) {
         claim.population = claim.population || "Customers eligible to return";
         claim.source_hint = claim.source_hint || "Board presentation";
       }
