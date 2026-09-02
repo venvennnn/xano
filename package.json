@@ -1,0 +1,19 @@
+{
+  "name": "metric-court",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Metric Court — organizational truth-resolution for conflicting business metrics. Built for the Xano hackathon track.",
+  "workspaces": [
+    "static",
+    "court-engine"
+  ],
+  "scripts": {
+    "dev": "concurrently -n court,ui -c red,blue \"npm run dev -w court-engine\" \"npm run dev -w static\"",
+    "start": "npm run start -w court-engine",
+    "test": "npm test -w court-engine",
+    "build": "npm run build -w static"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
