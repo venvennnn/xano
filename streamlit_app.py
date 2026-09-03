@@ -107,7 +107,7 @@ def page_docket():
         cols[5].write(c.get("deadline") or "")
         if cols[0].button("Hear", key=f"open_{c['id']}"):
             st.session_state.hearing_id = c["id"]
-            st.session_state.nav = "Hearing"
+            st.session_state.pending_nav = "Hearing"
             st.rerun()
 
     teams = dash["definition_conflicts_by_team"]
@@ -169,7 +169,7 @@ def page_convene():
             st.write("Drift: " + ", ".join(f"{t} drift" for t in (c.get("drift_types") or [])))
             if st.button("Enter hearing", key=f"enter_{c['id']}"):
                 st.session_state.hearing_id = c["id"]
-                st.session_state.nav = "Hearing"
+                st.session_state.pending_nav = "Hearing"
                 st.rerun()
     else:
         st.info("No new contradiction met the bar for a case. Claims were filed against the registry.")
@@ -354,6 +354,8 @@ def page_radar():
 
 
 state()
+if "pending_nav" in st.session_state:
+    st.session_state.nav = st.session_state.pop("pending_nav")
 st.sidebar.markdown("<div class='kicker'>Aether Credit</div>", unsafe_allow_html=True)
 st.sidebar.title("Metric Court")
 st.sidebar.caption("Organizational truth-resolution")
