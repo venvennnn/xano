@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "concurrently -n court,ui -c red,blue \"npm run dev -w court-engine\" \"npm run dev -w static\"",
     "start": "npm run start -w court-engine",
+    "start:web": "npm run build && npm run start -w court-engine",
     "test": "npm test -w court-engine",
     "build": "npm run build -w static"
   },
