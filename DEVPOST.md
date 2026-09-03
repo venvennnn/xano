@@ -53,7 +53,7 @@ P = 0.30D + 0.25V + 0.15S + 0.15A + 0.15R
 
 0–29 informational · 30–59 review · 60–79 high · 80–100 critical
 
-The model only extracts claims. It does not issue the verdict. Xano operates the court: the metric registry, aliases, definition versions, cases, evidence, verdicts, precedents, audit events, deterministic custom functions, database triggers that open a case on incompatible claims, background tasks for overdue hearings, and static hosting for the React courtroom.
+The model only extracts claims. It does not issue the verdict. Streamlit runs the live courtroom. Xano is the production court model: the metric registry, aliases, definition versions, cases, evidence, verdicts, precedents, audit events, deterministic custom functions, database triggers that open a case on incompatible claims, and background tasks for overdue hearings.
 
 Killer demo (fictional company Aether Credit — no confidential data):
 
@@ -61,7 +61,7 @@ Killer demo (fictional company Aether Credit — no confidential data):
 2. Paste the Q2 management transcript. Sales: 71%. Finance: 62%. Country manager: 68%.
 3. Metric Court opens Case MC-104: Retention v. Retention. Same quarter, same country, different population, different eligibility treatment. Severity 84, Critical.
 4. The steward issues the verdict: both figures are valid under different definitions. Management reporting will use customers eligible to return during the measurement window.
-5. Xano writes Customer Retention definition v4, stores the alias “Eligible-customer retention,” closes related case MC-101, and republishes the docket.
+5. The court writes Customer Retention definition v4, stores the alias “Eligible-customer retention,” closes related case MC-101, and republishes the docket.
 
 Closing line: Metric Court does not tell your company which number sounds right. It gives every number a definition, every disagreement a hearing, and every resolution a precedent.
 
@@ -74,53 +74,43 @@ Why that one?
 Everyone in a real company has lived the 71% vs 62% argument. Catalogs produce documentation. They do not produce a verdict. That is the category people genuinely hate, and it is not another CRM or help desk.
 
 Which AI tools?
-Cursor (cloud agent) to design and build the courtroom, the deterministic court engine, and the XanoScript backend. Optional OpenAI for claim extraction; the killer demo uses a deterministic parser so judges do not need an API key.
+Cursor (cloud agent) to design and build the Streamlit courtroom, the deterministic court engine, and the XanoScript backend. The killer demo uses a deterministic parser so judges do not need an API key.
 
 How long did it take?
-One focused build: seeded registry, extract → match → drift → case → hearing → verdict → precedent, plus the React courtroom and XanoScript.
+One focused build: seeded registry, extract → match → drift → case → hearing → verdict → precedent, plus the Streamlit courtroom and XanoScript.
 
 What would have taken longer without AI + Xano?
 Hand-writing the relational court model, the severity and matching functions, triggers, and a hosted API/frontend pair. Xano is the workflow, rules engine, audit log, API layer, realtime case manager, and host — not a database that stores the model’s output.
 
 Repo: https://github.com/venvennnn/xano
-Run: npm install && npm test && npm run dev
-One-process demo: npm run start:web  (serves the courtroom and the court APIs together)
+Run: pip install -r requirements.txt && streamlit run streamlit_app.py
+Deploy: Streamlit Community Cloud, main file streamlit_app.py
 ```
 
 ## It’s built with
 
 ```
+Streamlit
+Python
 Xano
 XanoScript
-React
-Vite
-TypeScript
-Node.js
-Express
 Cursor
 ```
 
 ## Try it out
 
-Local (always works):
+Streamlit is the whole app. No Vite, no Express, no extra ports.
 
 ```
 git clone https://github.com/venvennnn/xano.git
 cd xano
-npm install
-npm run dev
+python3 -m pip install -r requirements.txt
+streamlit run streamlit_app.py
 ```
 
-Open http://localhost:5173 — Convene → “Killer demo — Retention v. Retention” → Convene Court → Issue Verdict.
+Open http://localhost:8501 — Convene → “Killer demo — Retention v. Retention” → Convene Court → Issue Verdict.
 
-One process (for a host such as Render / Railway / Fly):
-
-```
-npm install
-npm run start:web
-```
-
-Then open the assigned `PORT` (default 8080).
+Deploy on [Streamlit Community Cloud](https://share.streamlit.io): connect this GitHub repo, set the main file to `streamlit_app.py`, click Deploy.
 
 Public repo: https://github.com/venvennnn/xano
 

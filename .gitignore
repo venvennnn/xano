@@ -11,3 +11,8 @@ static/dist
 .vite
 *.log
 .cursor
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
