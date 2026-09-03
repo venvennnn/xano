@@ -336,7 +336,7 @@ def page_radar():
             yaxis=dict(showgrid=False, zeroline=False, title="Severity"),
             showlegend=False,
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     left, right = st.columns(2)
     with left:
