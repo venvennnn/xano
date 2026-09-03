@@ -42,8 +42,15 @@ div[data-baseweb="select"] > div, .stTextArea textarea, .stTextInput input,
 }
 [data-testid="stHeader"] { background: #ffffff !important; border-bottom: 0; }
 [data-testid="stToolbar"] { background: #ffffff !important; }
-[data-testid="stSidebar"] {
+[data-testid="stSidebar"],
+[data-testid="stSidebar"] > div,
+[data-testid="stSidebarContent"],
+[data-testid="stSidebarUserContent"],
+section[data-testid="stSidebar"] {
   background: #ffffff !important;
+  background-color: #ffffff !important;
+}
+[data-testid="stSidebar"] {
   border-right: 1px solid #ececec;
 }
 [data-testid="stBottom"] { background: #ffffff !important; }
