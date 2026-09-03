@@ -6,16 +6,8 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-from metric_court.engine import (
-    DEMOS,
-    RETENTION_VERDICT,
-    analyze,
-    assemble_case,
-    dashboard,
-    format_value,
-    fresh_state,
-    issue_verdict,
-)
+from metric_court.backend import create_backend, xano_configured
+from metric_court.engine import DEMOS, RETENTION_VERDICT, format_value, fresh_state
 
 st.set_page_config(
     page_title="Metric Court",
@@ -71,14 +63,17 @@ footer { visibility: hidden; }
 st.markdown(WHITE, unsafe_allow_html=True)
 
 
-def state():
+def court():
+    if xano_configured():
+        return create_backend()
     if "court" not in st.session_state:
         st.session_state.court = fresh_state()
-    return st.session_state.court
+    return create_backend(st.session_state.court)
 
 
 def reset_court():
-    st.session_state.court = fresh_state()
+    backend = court()
+    backend.reset()
     st.session_state.pop("analyze", None)
     st.session_state.pop("hearing_id", None)
 
@@ -90,7 +85,7 @@ def pill(level: str, score=None) -> str:
 
 
 def page_docket():
-    dash = dashboard(state())
+    dash = court().dashboard()
     st.markdown("<div class='kicker'>Court docket · {}</div>".format(dash["company"]), unsafe_allow_html=True)
     st.title(dash["headline"])
     st.markdown("<p class='lede'>Companies do not have a data problem. They have a same-metric, different-truth problem.</p>", unsafe_allow_html=True)
@@ -147,7 +142,14 @@ def page_convene():
 
     if st.button("Convene Court", type="primary"):
         try:
-            st.session_state.analyze = analyze(state(), content=text, source_type=DEMOS.get(st.session_state.get("demo_id"), {}).get("type", "transcript"), title=DEMOS.get(st.session_state.get("demo_id"), {}).get("title", "Pasted source"))
+            demo_id = st.session_state.get("demo_id")
+            demo_meta = DEMOS.get(demo_id) or {}
+            st.session_state.analyze = court().analyze(
+                content=text,
+                source_type=demo_meta.get("type", "transcript"),
+                title=demo_meta.get("title", "Pasted source"),
+                demo=demo_id,
+            )
         except Exception as e:
             st.error(str(e))
             return
@@ -183,7 +185,7 @@ def page_convene():
 
 
 def page_hearing():
-    dash = dashboard(state())
+    dash = court().dashboard()
     options = dash["open_cases"] + dash["closed_cases"]
     if not options:
         st.write("No cases on the docket.")
@@ -192,7 +194,7 @@ def page_hearing():
     labels = {c["id"]: f"{c['case_number']} · {c['title']}" for c in options}
     choice = st.selectbox("Case", [c["id"] for c in options], index=next((i for i, c in enumerate(options) if c["id"] == default), 0), format_func=lambda i: labels.get(i, str(i)))
     st.session_state.hearing_id = choice
-    c = assemble_case(state(), choice)
+    c = court().assemble_case(choice)
     if not c:
         st.error("Case not found")
         return
@@ -269,7 +271,7 @@ def page_hearing():
                     payload["outcome"] = outcome
                     payload["statement"] = statement
                     payload["amend_definition"] = True
-                result = issue_verdict(state(), c["id"], payload)
+                result = court().issue_verdict(c["id"], payload)
                 bits = ["Verdict on file."]
                 if result.get("definition"):
                     bits.append(f"Definition version {result['definition']['version']} written.")
@@ -284,7 +286,7 @@ def page_hearing():
 def page_registry():
     st.markdown("<div class='kicker'>Canonical metric registry</div>", unsafe_allow_html=True)
     st.title("A definition is not a verdict. It is the thing the verdict is about.")
-    dash = dashboard(state())
+    dash = court().dashboard()
     for m in dash["registry"]:
         with st.expander(f"{m['canonical_id']}  ·  {m['name']}", expanded=m["canonical_id"] == "M-RET-001"):
             st.markdown(pill(m.get("health_status", "")), unsafe_allow_html=True)
@@ -301,7 +303,7 @@ def page_registry():
 def page_precedents():
     st.markdown("<div class='kicker'>Precedent library</div>", unsafe_allow_html=True)
     st.title("A closed case is only useful if the next disagreement can find it.")
-    dash = dashboard(state())
+    dash = court().dashboard()
     for p in dash["precedents"]:
         st.markdown(f"<span class='case-no'>{(p.get('case') or {}).get('case_number','')}</span>  ·  {(p.get('metric') or {}).get('name','')}  ·  {', '.join(p.get('applies_to_drift') or [])} drift", unsafe_allow_html=True)
         st.subheader(p.get("title") or "")
@@ -311,7 +313,7 @@ def page_precedents():
 
 def page_radar():
     st.markdown("<div class='kicker'>Drift radar</div>", unsafe_allow_html=True)
-    dash = dashboard(state())
+    dash = court().dashboard()
     st.title(dash["headline"])
     st.markdown("<p class='lede'>Not machine-learning data drift. Semantic metric drift: definition, value, time, scope, status, source.</p>", unsafe_allow_html=True)
     k = dash["kpis"]
@@ -360,12 +362,17 @@ def page_radar():
             st.write(f"**{(row.get('metric') or {}).get('name')}** — {row['count']} cases")
 
 
-state()
 if "pending_nav" in st.session_state:
     st.session_state.nav = st.session_state.pop("pending_nav")
+backend = court()
 st.sidebar.markdown("<div class='kicker'>Aether Credit</div>", unsafe_allow_html=True)
 st.sidebar.title("Metric Court")
 st.sidebar.caption("Organizational truth-resolution")
+st.sidebar.markdown(
+    f"<div class='kicker'>Court · {backend.name}</div>",
+    unsafe_allow_html=True,
+)
+st.sidebar.caption(backend.detail)
 nav = st.sidebar.radio(
     "Navigate",
     ["Docket", "Convene", "Hearing", "Registry", "Precedents", "Drift radar"],
@@ -375,7 +382,10 @@ st.sidebar.markdown("---")
 st.sidebar.write("**Priya Nair**")
 st.sidebar.caption("Judge · Chief Data Officer")
 if st.sidebar.button("Reset seeded demo"):
-    reset_court()
-    st.rerun()
+    try:
+        reset_court()
+        st.rerun()
+    except Exception as exc:
+        st.sidebar.error(str(exc))
 
 {"Docket": page_docket, "Convene": page_convene, "Hearing": page_hearing, "Registry": page_registry, "Precedents": page_precedents, "Drift radar": page_radar}[nav]()

@@ -53,7 +53,7 @@ P = 0.30D + 0.25V + 0.15S + 0.15A + 0.15R
 
 0–29 informational · 30–59 review · 60–79 high · 80–100 critical
 
-The model only extracts claims. It does not issue the verdict. Streamlit runs the live courtroom. Xano is the production court model: the metric registry, aliases, definition versions, cases, evidence, verdicts, precedents, audit events, deterministic custom functions, database triggers that open a case on incompatible claims, and background tasks for overdue hearings.
+The model only extracts claims. It does not issue the verdict. Streamlit is the courtroom UI. Xano operates the court: the metric registry, aliases, definition versions, cases, evidence, verdicts, precedents, audit events, deterministic custom functions (severity, matching, period, scope), the on_claim_insert trigger that opens a case, the on_verdict_insert trigger that reassesses related matters, background tasks for overdue hearings, and the API group Streamlit calls.
 
 Killer demo (fictional company Aether Credit — no confidential data):
 
@@ -110,7 +110,9 @@ streamlit run streamlit_app.py
 
 Open http://localhost:8501 — Convene → “Killer demo — Retention v. Retention” → Convene Court → Issue Verdict.
 
-Deploy on [Streamlit Community Cloud](https://share.streamlit.io): connect this GitHub repo, set the main file to `streamlit_app.py`, click Deploy.
+Deploy on [Streamlit Community Cloud](https://share.streamlit.io): connect this GitHub repo, set the main file to `streamlit_app.py`, add secrets `XANO_API_BASE` (and optional `XANO_API_KEY`) pointing at your Xano API group, click Deploy.
+
+Until the workspace is live, Streamlit runs a local stand-in of the same Xano functions so the killer demo still works. The XanoScript in `xano/` is the backend judges should review.
 
 Public repo: https://github.com/venvennnn/xano
 

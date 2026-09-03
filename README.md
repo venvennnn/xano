@@ -10,10 +10,10 @@ When Sales reports **71% retention** and Finance reports **62%**, both may be te
 
 This repository is a complete hackathon MVP:
 
-- **Streamlit courtroom** (`streamlit_app.py`) — the app you run and deploy. White background. One file, one `requirements.txt`, Streamlit Community Cloud.
-- Deterministic court engine (`metric_court/`) — extract, match, drift, severity, verdict, precedent
-- XanoScript (`xano/`) — tables, functions, APIs, database triggers, and scheduled tasks for the Xano challenge
-- Optional React + Express (`static/`, `court-engine/`) if you still want the original Xano static-hosting path
+- **Streamlit courtroom** (`streamlit_app.py`) — the UI you run and deploy. White background.
+- **Xano court** (`xano/`) — the required backend. Tables, custom functions, APIs, database triggers, scheduled tasks. Streamlit talks to the Xano API group.
+- Local stand-in (`metric_court/`) — same Xano functions in Python so the demo runs before a workspace is connected
+- Optional React + Express (`static/`, `court-engine/`) — the original Xano static-hosting path
 
 ## Killer demo (two minutes)
 
@@ -42,29 +42,43 @@ python3 -m unittest metric_court.test_engine
 streamlit run streamlit_app.py
 ```
 
-Open [http://localhost:8501](http://localhost:8501). That is the whole app — no Vite proxy, no Express port, no Xano workspace required for the demo.
+Open [http://localhost:8501](http://localhost:8501). The sidebar says **Court · Xano** when a workspace is connected, or **Court · Xano stand-in (local)** until you set `XANO_API_BASE`.
+
+## Connect Xano (required for the sponsor track)
+
+Streamlit is only the courtroom. **Xano operates the court.**
+
+1. Push `xano/` with the [Xano CLI](https://docs.xano.com/xano-cli/get-started) (`xano auth`, then sync tables, functions, APIs, triggers, tasks).
+2. Seed the Aether Credit registry in the workspace (or point Streamlit at `court-engine` first — same routes).
+3. In Streamlit Cloud → **Settings → Secrets**, or in `.streamlit/secrets.toml`:
+
+```toml
+XANO_API_BASE = "https://YOUR-INSTANCE.xano.io/api:YOUR_GROUP"
+XANO_API_KEY = ""
+```
+
+| Xano primitive | What Metric Court uses it for |
+| --- | --- |
+| Database | Users, teams, metric registry, aliases, definition versions, claims, sources, cases, evidence, verdicts, precedents, appeals, audit events |
+| Custom functions | Matching score, relative value difference, period compatibility, scope overlap, case severity, precedent similarity |
+| Database triggers | `on_claim_insert` opens a case; `on_verdict_insert` reassesses related matters |
+| Realtime | Courtroom channel → docket and hearing |
+| Background tasks | Overdue hearings, unresolved recheck, daily drift digest |
+| API group | Streamlit calls `/sources/analyze`, `/cases`, `/cases/{id}/verdict`, `/dashboard` |
+
+Without `XANO_API_BASE`, Streamlit runs the same functions locally so you can still demo. The XanoScript in `xano/` is the production backend judges should review.
 
 ## Deploy (Streamlit Community Cloud)
 
 1. Push this repo to GitHub.
 2. Go to [share.streamlit.io](https://share.streamlit.io), sign in with GitHub, **Create app**.
 3. Repository: `venvennnn/xano`. Branch: `main`. Main file: `streamlit_app.py`.
-4. Deploy. The live URL is the “Try it out” link.
-
-That is the entire deployment structure.
+4. Paste `XANO_API_BASE` in Secrets.
+5. Deploy. The live URL is the “Try it out” link.
 
 ## Why Xano is not just the database
 
-The model extracts claims. **Xano operates the court.**
-
-| Xano primitive | What Metric Court uses it for |
-| --- | --- |
-| Database | Users, teams, metric registry, aliases, definition versions, claims, sources, cases, evidence, verdicts, precedents, appeals, audit events |
-| Custom functions | Matching score, relative value difference, period compatibility, scope overlap, case severity, precedent similarity |
-| Database triggers | Open a case on incompatible claim insert; assign the metric owner; audit evidence; version a metric after a verdict; reassess open cases; publish realtime |
-| Realtime | Courtroom channel → docket and hearing |
-| Background tasks | Recheck unresolved cases, overdue hearings, recurring-drift summaries, daily digest, chronic definitions |
-| API + static hosting | React talks to Xano APIs; Vite build is hosted beside the backend |
+The model extracts claims. **Xano operates the court.** Streamlit never issues a verdict on its own — it POSTs to Xano.
 
 Severity is **not** an LLM guess:
 
@@ -87,23 +101,25 @@ The six kinds of drift are semantic, not ML: **value, definition, time, scope, s
 
 **Skipped (on purpose):** real Slack or Meet, Snowflake, enterprise SSO, SQL execution, multi-tenant orgs, notification vendors, statistical anomaly detection.
 
-## Deploy to a Xano workspace (optional)
+## Push the Xano workspace
 
-The live demo is Streamlit. XanoScript in `xano/` is the sponsor backend model — tables, functions, APIs, triggers, tasks. If you connect a workspace:
+```bash
+npm i -g @xano/cli
+xano auth
+# sync xano/tables xano/functions xano/apis xano/triggers xano/tasks
+```
 
-1. Push `xano/` with the [Xano CLI](https://docs.xano.com/xano-cli/get-started).
-2. The Streamlit app does not need that workspace. It runs the same court rules in `metric_court/`.
+`court-engine` implements the same API contract locally (`npm start` in `court-engine/`, then `XANO_API_BASE=http://localhost:8080`).
 
 ## Architecture
 
 ```
-streamlit_app.py     Courtroom UI (Docket, Convene, Hearing, Registry, Precedents, Drift radar)
-metric_court/        Python court engine + seeded Aether Credit registry
-.streamlit/          White light theme
-requirements.txt     streamlit, pandas, plotly
-xano/                XanoScript for the sponsor backend (tables, functions, APIs, triggers, tasks)
+streamlit_app.py     Courtroom UI — talks to the Xano API group
+xano/                Xano backend: tables, functions, APIs, triggers, tasks
+metric_court/        Local stand-in of those Xano functions + HTTP client
+.streamlit/          White theme + secrets.toml.example (XANO_API_BASE)
+court-engine/        Same API contract on localhost:8080
 static/              Optional React courtroom
-court-engine/        Optional Express runtime of the same Xano API contract
 ```
 
 API surface (frontend → Xano or court-engine):
